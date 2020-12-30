@@ -7,7 +7,7 @@ for the end-user to do what they will with.
 # Parsing the HTTP Request
 
 ```go
-dir, err := httpcc.ParseRequest(res)
+dir, err := httpcc.ParseRequest(req.Header.Get(`Cache-Control`))
 // dir.MaxAge       uint
 // dir.MaxStale     uint
 // dir.MinFresh     uint
@@ -21,7 +21,7 @@ dir, err := httpcc.ParseRequest(res)
 # Parsing the HTTP Response
 
 ```go
-directives, err := httpcc.ParseResponse(res)
+directives, err := httpcc.ParseResponse(res.Header.Get(`Cache-Control`))
 // dir.MaxAge         uint
 // dir.MustRevalidate bool
 // dir.NoCache        []string
