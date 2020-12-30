@@ -16,6 +16,8 @@ dir, err := httpcc.ParseRequest(res)
 // dir.NoTransform  bool
 // dir.OnlyIfCached bool
 // dir.Extensions   map[string]string
+```
+
 # Parsing the HTTP Response
 
 ```go
