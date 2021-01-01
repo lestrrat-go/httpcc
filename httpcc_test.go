@@ -7,6 +7,70 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func compareRequestDirective(t *testing.T, expected map[string]interface{}, dir *httpcc.RequestDirective) bool {
+	t.Helper()
+
+	for k, v := range expected {
+		switch k {
+		case httpcc.MaxAge:
+			got, ok := dir.MaxAge()
+			if !assert.True(t, ok, `dir.MaxAge() should return true`) {
+				return false
+			}
+
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		case httpcc.NoStore:
+			got := dir.NoStore()
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		case "extensions":
+			got := dir.Extensions()
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		default:
+			assert.Fail(t, `unhandled field %s`, k)
+			return false
+		}
+	}
+	return true
+}
+
+func compareResponseDirective(t *testing.T, expected map[string]interface{}, dir *httpcc.ResponseDirective) bool {
+	t.Helper()
+
+	for k, v := range expected {
+		switch k {
+		case httpcc.MaxAge:
+			got, ok := dir.MaxAge()
+			if !assert.True(t, ok, `dir.MaxAge() should return true`) {
+				return false
+			}
+
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		case httpcc.NoStore:
+			got := dir.NoStore()
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		case "extensions":
+			got := dir.Extensions()
+			if !assert.Equal(t, v, got) {
+				return false
+			}
+		default:
+			assert.Fail(t, `unhandled field %s`, k)
+			return false
+		}
+	}
+	return true
+}
+
 func TestParseDirective(t *testing.T) {
 	testcases := []struct {
 		Source    string
@@ -128,13 +192,13 @@ func TestParseRequest(t *testing.T) {
 	testcases := []struct {
 		Source   string
 		Error    bool
-		Expected *httpcc.RequestDirective
+		Expected map[string]interface{}
 	}{
 		{
 			Source: `max-age=4649, no-store`,
-			Expected: &httpcc.RequestDirective{
-				MaxAge:  4649,
-				NoStore: true,
+			Expected: map[string]interface{}{
+				httpcc.MaxAge:  uint64(4649),
+				httpcc.NoStore: true,
 			},
 		},
 		{
@@ -154,7 +218,7 @@ func TestParseRequest(t *testing.T) {
 				if !assert.NoError(t, err, `expected to succeed`) {
 					return
 				}
-				if !assert.Equal(t, tc.Expected, dir, `expected to return a RequestDirective`) {
+				if !compareRequestDirective(t, tc.Expected, dir) {
 					return
 				}
 			}
@@ -166,14 +230,14 @@ func TestParseResponse(t *testing.T) {
 	testcases := []struct {
 		Source   string
 		Error    bool
-		Expected *httpcc.ResponseDirective
+		Expected map[string]interface{}
 	}{
 		{
 			Source: `max-age=4649, no-store, community="UCI"`,
-			Expected: &httpcc.ResponseDirective{
-				MaxAge:  4649,
-				NoStore: true,
-				Extensions: map[string]string{
+			Expected: map[string]interface{}{
+				httpcc.MaxAge:  uint64(4649),
+				httpcc.NoStore: true,
+				"extensions": map[string]string{
 					"community": "UCI",
 				},
 			},
@@ -195,11 +259,10 @@ func TestParseResponse(t *testing.T) {
 				if !assert.NoError(t, err, `expected to succeed`) {
 					return
 				}
-				if !assert.Equal(t, tc.Expected, dir, `expected to return a ResponseDirective`) {
+				if !compareResponseDirective(t, tc.Expected, dir) {
 					return
 				}
 			}
 		})
 	}
 }
-

@@ -27,29 +27,6 @@ const (
 	SMaxAge         = "s-maxage"
 )
 
-type RequestDirective struct {
-	MaxAge       uint64
-	MaxStale     uint64
-	MinFresh     uint64
-	NoCache      bool
-	NoStore      bool
-	NoTransform  bool
-	OnlyIfCached bool
-	Extensions   map[string]string
-}
-
-type ResponseDirective struct {
-	MaxAge          uint64
-	NoCache         []string
-	NoStore         bool
-	NoTransform     bool
-	Public          bool
-	Private         []string
-	ProxyRevalidate bool
-	SMaxAge         uint64
-	Extensions      map[string]string
-}
-
 type TokenPair struct {
 	Name  string
 	Value string
@@ -254,29 +231,29 @@ func ParseRequest(v string) (*RequestDirective, error) {
 			if err != nil {
 				return nil, errors.Wrap(err, `failed to parse max-age`)
 			}
-			dir.MaxAge = iv
+			dir.maxAge = &iv
 		case MaxStale:
 			iv, err := strconv.ParseUint(token.Value, 10, 64)
 			if err != nil {
 				return nil, errors.Wrap(err, `failed to parse max-stale`)
 			}
-			dir.MaxStale = iv
+			dir.maxStale = &iv
 		case MinFresh:
 			iv, err := strconv.ParseUint(token.Value, 10, 64)
 			if err != nil {
 				return nil, errors.Wrap(err, `failed to parse min-fresh`)
 			}
-			dir.MinFresh = iv
+			dir.minFresh = &iv
 		case NoCache:
-			dir.NoCache = true
+			dir.noCache = true
 		case NoStore:
-			dir.NoStore = true
+			dir.noStore = true
 		case NoTransform:
-			dir.NoTransform = true
+			dir.noTransform = true
 		case OnlyIfCached:
-			dir.OnlyIfCached = true
+			dir.onlyIfCached = true
 		default:
-			dir.Extensions[token.Name] = token.Value
+			dir.extensions[token.Name] = token.Value
 		}
 	}
 	return &dir, nil
@@ -290,7 +267,7 @@ func ParseResponse(v string) (*ResponseDirective, error) {
 	}
 
 	var dir ResponseDirective
-	dir.Extensions = make(map[string]string)
+	dir.extensions = make(map[string]string)
 	for _, token := range tokens {
 		name := strings.ToLower(token.Name)
 		switch name {
@@ -299,35 +276,35 @@ func ParseResponse(v string) (*ResponseDirective, error) {
 			if err != nil {
 				return nil, errors.Wrap(err, `failed to parse max-age`)
 			}
-			dir.MaxAge = iv
+			dir.maxAge = &iv
 		case NoCache:
 			scanner := bufio.NewScanner(strings.NewReader(token.Value))
 			scanner.Split(scanCommaSeparatedWords)
 			for scanner.Scan() {
-				dir.NoCache = append(dir.NoCache, scanner.Text())
+				dir.noCache = append(dir.noCache, scanner.Text())
 			}
 		case NoStore:
-			dir.NoStore = true
+			dir.noStore = true
 		case NoTransform:
-			dir.NoTransform = true
+			dir.noTransform = true
 		case Public:
-			dir.Public = true
+			dir.public = true
 		case Private:
 			scanner := bufio.NewScanner(strings.NewReader(token.Value))
 			scanner.Split(scanCommaSeparatedWords)
 			for scanner.Scan() {
-				dir.Private = append(dir.Private, scanner.Text())
+				dir.private = append(dir.private, scanner.Text())
 			}
 		case ProxyRevalidate:
-			dir.ProxyRevalidate = true
+			dir.proxyRevalidate = true
 		case SMaxAge:
 			iv, err := strconv.ParseUint(token.Value, 10, 64)
 			if err != nil {
 				return nil, errors.Wrap(err, `failed to parse s-maxage`)
 			}
-			dir.SMaxAge = iv
+			dir.sMaxAge = &iv
 		default:
-			dir.Extensions[token.Name] = token.Value
+			dir.extensions[token.Name] = token.Value
 		}
 	}
 	return &dir, nil
